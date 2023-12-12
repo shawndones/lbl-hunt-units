@@ -30,7 +30,7 @@
       });
 
       // Load and add the KMZ file to the viewer
-      KmlDataSource.load('lbl-hunt-area-4.kml')  // Change this to the actual path of your KMZ file
+      KmlDataSource.load('lbl-hunt-areas.kml')  // Change this to the actual path of your KMZ file
         .then(dataSource => {
           this.viewer.dataSources.add(dataSource);
 
@@ -52,22 +52,10 @@
         this.updateCameraCoordinates();
       });
 
-      // Call the method correctly
-      // this.getCameraCoordinates();
     },
 
     methods: {
-      // getCameraCoordinates() {
-      //   const camera = this.viewer.camera;
-      //   const position = camera.positionCartographic;
-
-      //   // Convert radians to degrees for latitude and longitude
-      //   const latitude = CesiumMath.toDegrees(position.latitude);
-      //   const longitude = CesiumMath.toDegrees(position.longitude);
-      //   const height = position.height; // Height in meters
-
-      //   console.log(`Latitude: ${latitude}, Longitude: ${longitude}, Height: ${height}`);
-      // },
+  
       updateCameraCoordinates() {
         const camera = this.viewer.camera;
         const position = camera.positionCartographic;
@@ -77,22 +65,12 @@
         this.coordinates.height = position.height;
       }
     }
+
+
+
   }
 
-
-
-
-
-
-
 </script>
-
-
-
-
-
-
-
 
 <template>
   <div ref="cesiumContainer" style="height: 100%;"></div>

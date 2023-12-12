@@ -7,10 +7,10 @@
 			<key>normal</key>
 			<styleUrl>#sn_ylw-pushpin</styleUrl>
 		</Pair>
-		<Pair>
+		<!-- <Pair>
 			<key>highlight</key>
 			<styleUrl>#sh_ylw-pushpin</styleUrl>
-		</Pair>
+		</Pair> -->
 	</StyleMap>
 	<Style id="sh_ylw-pushpin">
 		<IconStyle>

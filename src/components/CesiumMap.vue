@@ -1,5 +1,5 @@
 <script>
-  import { Cartesian3, Math as CesiumMath, Terrain, Viewer, KmlDataSource } from 'cesium';
+  import { Cartesian3, Math as CesiumMath, Terrain, Viewer, KmlDataSource, defined, ScreenSpaceEventType, ColorMaterialProperty, Color, LabelGraphics, LabelStyle, VerticalOrigin } from 'cesium';
   import 'cesium/Build/Cesium/Widgets/widgets.css';
 
   export default {
@@ -8,6 +8,7 @@
     data() {
       return {
         viewer: null,
+        selectedEntityInfo: null,
         coordinates: {
           latitude: 0,
           longitude: 0,
@@ -36,8 +37,47 @@
 
           // Ensure there are entities in the dataSource before attempting to zoom
           if (dataSource.entities.values.length > 0) {
+
             const entities = dataSource.entities.values;
             this.viewer.zoomTo(entities); // Zoom to all the entities
+            
+            // Set each entity as pickable
+            dataSource.entities.values.forEach(entity => {
+              
+              entity.pickable = true;
+              if (entity.polygon) {
+                // Set polygon material
+                entity.polygon.material = new ColorMaterialProperty(Color.WHITE.withAlpha(0.01));
+              }
+              console.log(entity.label);
+     
+              // Add a label to the entity
+              entity.label = new LabelGraphics({
+                text: entity.name || 'Unnamed',
+                font: '14pt monospace',
+                fillColor: Color.WHITE,
+                outlineColor: Color.BLACK,
+                outlineWidth: 2,
+                style: LabelStyle.FILL_AND_OUTLINE,
+                verticalOrigin: VerticalOrigin.BOTTOM,
+                pixelOffset: new Cartesian3(0, -15)  // Adjust as needed
+              });
+            });
+
+      //  // Add a test entity with a label
+      //  this.viewer.entities.add({
+      //     position: Cartesian3.fromDegrees(-88.1265, 36.84, 155),
+      //     label: {
+      //       text: 'Test Label',
+      //       font: '14pt monospace',
+      //       fillColor: Color.WHITE,
+      //       outlineColor: Color.BLACK,
+      //       outlineWidth: 2,
+      //       style: LabelStyle.FILL_AND_OUTLINE,
+      //       verticalOrigin: VerticalOrigin.BOTTOM,
+      //       pixelOffset: new Cartesian3(0, -15)
+      //     }
+      //   });
           } else {
             console.warn('No entities found in the KMZ file');
           }
@@ -46,6 +86,24 @@
           console.error('Error loading KMZ file:', error);
         });
 
+        // Add a click event listener to the viewer
+        // this.viewer.screenSpaceEventHandler.setInputAction(click => {
+        //   const pickedObject = this.viewer.scene.pick(click.position);
+        //   if (defined(pickedObject) && pickedObject.id) {
+        //     this.selectedEntityInfo = pickedObject.id.name || 'No name';
+        //     console.log('Selected Entity Info:', this.selectedEntityInfo); // Debugging
+        //   }
+        // }, ScreenSpaceEventType.LEFT_CLICK);
+// Add a hover event listener to the viewer
+this.viewer.screenSpaceEventHandler.setInputAction(movement => {
+    const pickedObject = this.viewer.scene.pick(movement.endPosition);
+    if (defined(pickedObject) && pickedObject.id) {
+      this.selectedEntityInfo = pickedObject.id.name || 'No name';
+      this.updateInfoBoxPosition(movement.endPosition);
+    } else {
+      this.selectedEntityInfo = null;
+    }
+  }, ScreenSpaceEventType.MOUSE_MOVE);
 
       // Update coordinates when the camera moves
       this.viewer.camera.moveEnd.addEventListener(() => {
@@ -55,7 +113,13 @@
     },
 
     methods: {
-  
+      updateInfoBoxPosition(screenPosition) {
+    const infoBox = this.$refs.entityInfo;
+    if (infoBox) {
+      infoBox.style.left = `${screenPosition.x + 10}px`;
+      infoBox.style.top = `${screenPosition.y + 10}px`;
+    }
+  },
       updateCameraCoordinates() {
         const camera = this.viewer.camera;
         const position = camera.positionCartographic;
@@ -63,11 +127,13 @@
         this.coordinates.latitude = CesiumMath.toDegrees(position.latitude);
         this.coordinates.longitude = CesiumMath.toDegrees(position.longitude);
         this.coordinates.height = position.height;
-      }
+      },
+      getEntityInfo(entity) {
+        // Retrieve and return information from the entity
+        // For example, you can return entity.name or any other property
+        return entity.name || 'No name';
+      },
     }
-
-
-
   }
 
 </script>
@@ -79,13 +145,10 @@
     <p>Longitude: {{ coordinates.longitude }}</p>
     <p>Height: {{ coordinates.height }} meters</p>
   </div>
+  <div ref="entityInfo" v-if="selectedEntityInfo" class="entity-info">
+  {{ selectedEntityInfo }}
+</div>
 </template>
-
-
-
-
-
-
 
 
 <style>
@@ -96,13 +159,9 @@
   color: white;
   z-index: 10;
 }
-  /* .cesium-viewer-toolbar, .cesium-viewer-selectionIndicatorContainer, .cesium-viewer-infoBoxContainer, .cesium-viewer-timelineContainer, .cesium-viewer-bottom, .cesium-viewer-animationContainer {
-    display: none;
-    visibility: hidden;
-  }
-
-  .cesium-viewer, .cesium-viewer-cesiumWidgetContainer, .cesium-widget {
-    height: 100vh;
-    width: 100vh;
-  } */
+.entity-info {
+  position: absolute;
+  background: white;
+  padding: 10px;
+}
 </style>
